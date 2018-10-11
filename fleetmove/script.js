@@ -226,7 +226,10 @@ stage.on("drop", function(e){
     executeMove(selectedship, getPlanetFromShip(selectedship.fill()), e.target.name().split(' ')[1]);
 });
 
-function snapship(ship, planet);
+function snapship(ship, planet)
+{
+    
+}
 
 function executeMove(targetship, targetplanet, destinationplanet)
 {
