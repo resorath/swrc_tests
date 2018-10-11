@@ -61,7 +61,7 @@ shipdefs.forEach(function(shipdef)
 		fill:  shipdef.colour,
 		stroke: 'black',
 		strokeWidth: 5,
-		rotation: 150,
+		rotation: 150 + (180 * (shipdef.colour === 'lime')),
 		draggable: (shipdef.colour == 'lime')
 	})
 
@@ -87,4 +87,100 @@ function drawArrow(planet1, planet2, colour)
 	layer.add(arrow);
 }
 
+
 stage.add(layer);
+
+var previousShape;
+stage.on("dragmove", function(evt){
+    var pos = stage.getPointerPosition();
+    var shape = layer.getIntersection(pos);
+    console.log(previousShape);
+    console.log(shape);
+    if (previousShape && shape) {
+        if (previousShape !== shape) {
+            // leave from old targer
+            previousShape.fire('dragleave', {
+                type : 'dragleave',
+                target : previousShape,
+                evt : evt.evt
+            }, true);
+
+            // enter new targer
+            shape.fire('dragenter', {
+                type : 'dragenter',
+                target : shape,
+                evt : evt.evt
+            }, true);
+            previousShape = shape;
+        } else {
+            previousShape.fire('dragover', {
+                type : 'dragover',
+                target : previousShape,
+                evt : evt.evt
+            }, true);
+        }
+    } else if (!previousShape && shape) {
+        previousShape = shape;
+        shape.fire('dragenter', {
+            type : 'dragenter',
+            target : shape,
+            evt : evt.evt
+        }, true);
+    } else if (previousShape && !shape) {
+        previousShape.fire('dragleave', {
+            type : 'dragleave',
+            target : previousShape,
+            evt : evt.evt
+        }, true);
+        previousShape = undefined;
+    }
+});
+
+var tempLayer = new Konva.Layer();
+stage.add(tempLayer);
+
+stage.on("dragstart", function(e){
+        e.target.moveTo(tempLayer);
+        console.log('Moving ' + e.target.name());
+        layer.draw();
+    });
+
+stage.on("dragend", function(e){
+        var pos = stage.getPointerPosition();
+        var shape = layer.getIntersection(pos);
+        if (shape) {
+            previousShape.fire('drop', {
+                type : 'drop',
+                target : previousShape,
+                evt : e.evt
+            }, true);
+        }
+        previousShape = undefined;
+        e.target.moveTo(layer);
+        layer.draw();
+        tempLayer.draw();
+    });
+
+stage.on("dragenter", function(e){
+    e.target.fill('green');
+    console.log('dragenter ' + e.target.name());
+    layer.draw();
+});
+
+stage.on("dragleave", function(e){
+    e.target.fill('blue');
+    console.log('dragleave ' + e.target.name());
+    layer.draw();
+});
+
+stage.on("dragover", function(e){
+    console.log('dragover ' + e.target.name());
+    layer.draw();
+});
+
+stage.on("drop", function(e){
+    e.target.fill('red');
+    console.log('drop ' + e.target.name());
+    layer.draw();
+});
+
