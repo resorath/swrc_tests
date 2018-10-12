@@ -285,6 +285,7 @@ function arrowFromPlanets(source, destination)
 	return r;
 }
 
+var m = 0;
 function executeMove(targetship, targetplanet, destinationplanet)
 {
 	if(targetplanet == destinationplanet)
@@ -298,7 +299,12 @@ function executeMove(targetship, targetplanet, destinationplanet)
 	if(arrow === undefined)
 		arrow = drawArrow(targetplanet, destinationplanet, targetship.shape.fill());
 
-	putShipOnArrow(targetship, arrow, 10)
+	window.setInterval(function() {
+		putShipOnArrow(targetship, arrow, m);
+		m++;
+		layer.draw();
+
+	}, 100);
 
 	layer.draw();
 }
@@ -311,7 +317,7 @@ function putShipOnPlanet(ship, planet)
 
 function putShipOnArrow(ship, arrow, progress)
 {
-	var newshiploc = intercept(arrow, 50);
+	var newshiploc = intercept(arrow, progress);
 
 	ship.shape.x(newshiploc.x);
 	ship.shape.y(newshiploc.y);
