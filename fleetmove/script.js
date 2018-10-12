@@ -311,10 +311,16 @@ function putShipOnPlanet(ship, planet)
 
 function putShipOnArrow(ship, arrow, progress)
 {
-	var newshiploc = intercept(arrow, 20);
+	var newshiploc = intercept(arrow, 50);
 
 	ship.shape.x(newshiploc.x);
 	ship.shape.y(newshiploc.y);
+
+	var points = arrow.shape.points();
+	var rot = (Math.atan2(points[3] - points[1], points[2] - points[0]) * 180 / Math.PI) - (ship.shape.angle() / 2) + 180;
+	console.log(rot);
+	ship.shape.setRotation(rot);
+
 }
 
 function intercept(arrow, progress)
@@ -355,6 +361,7 @@ function intercept(arrow, progress)
 	return {x: smallerX, y: smallerY};
 
 }
+
 
 function lineDistance( point1, point2 ){
     var xs = 0;
