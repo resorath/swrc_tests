@@ -31,20 +31,7 @@ var shipdefs = [
 
 ]
 
-function getPlanetFromShip(ship)
-{
-	var rval;
-	shipdefs.forEach(function(shipdef)
-	{
-		if(shipdef.colour == ship)
-		{
-			rval = shipdef.planet;
-			return;
-		}
-	})
 
-	return rval;
-}
 
 
 // set up planets
@@ -58,22 +45,28 @@ planetdefs.forEach(function(planetdef)
 		fill: planetdef[2],
 		stroke: '#CCCCCC',
 		strokeWidth: 4,
-		type: "planet",
-		name: "planet " + i++
+		name: "planet " + i
 	});
 
 	layer.add(planet);
 
-	planets.push(planet);
+	planets.push({
+		type: "planet",
+		name: i,
+		team: planetdef[2],
+		shape: planet
+	});
 
+	i++
 });
 
 // set up ships
+i = 0;
 shipdefs.forEach(function(shipdef)
 {
 	var ship = new Konva.Wedge({
-		x: planets[shipdef.planet].x() + (planets[shipdef.planet].radius() * 1.2),
-		y: planets[shipdef.planet].y() + (planets[shipdef.planet].radius() * 1.2),
+		x: planets[shipdef.planet].shape.x() + (planets[shipdef.planet].shape.radius() * 1.2),
+		y: planets[shipdef.planet].shape.y() + (planets[shipdef.planet].shape.radius() * 1.2),
 		radius: 70 * (Math.min(swidth / 1024, 1)),
 		angle: 60,
 		fill:  shipdef.colour,
@@ -81,29 +74,43 @@ shipdefs.forEach(function(shipdef)
 		strokeWidth: 5,
 		rotation: 150 + (180 * (shipdef.colour === 'lime')),
 		draggable: (shipdef.colour == 'lime'),
-		type: "ship",
-		name: shipdef.colour + " ship"
+		name: "ship " + i
 	})
 
 	layer.add(ship);
 
-	ships.push(ship);
+	ships.push({
+		type: "ship",
+		name: i,
+		team: shipdef.colour,
+		planet: planets[shipdef.planet],
+		planettransit: undefined,
+		shape: ship
+	});
+
+	i++
 
 });
 
+i = 0;
 function drawArrow(planet1, planet2, colour)
 {
 	var arrow = new Konva.Arrow({
-	  points: [planets[planet1].x() , planets[planet1].y(), planets[planet2].x(), planets[planet2].y()],
+	  points: [planet1.shape.x() , planet1.shape.y(), planet2.shape.x(), planet2.shape.y()],
 	  pointerLength: 20,
 	  pointerWidth : 20,
-	  fill: 'black',
-	  stroke: colour,
+	  fill: colour,
+	  stroke: 'black',
 	  strokeWidth: 4,
 	  name: colour + " line"
 	});
 
-	arrows.push(arrow);
+	arrows.push({
+		type: "arrow",
+		name: i,
+		team: colour,
+		shape: arrow
+	});
 
 	layer.add(arrow);
 }
@@ -223,12 +230,39 @@ stage.on("drop", function(e){
     console.log('drop ' + e.target.name());
     layer.draw();
 
-    executeMove(selectedship, getPlanetFromShip(selectedship.fill()), e.target.name().split(' ')[1]);
+    var ship = shipFromShape(selectedship);
+    var destinationplanet = planetFromShape(e.target);
+
+    executeMove(ship, ship.planet, destinationplanet);
 });
 
-function snapship(ship, planet)
+function shipFromShape(shape)
 {
-    
+	var r;
+	ships.forEach(function(ship)
+	{
+		if(ship.shape == shape)
+		{
+			r = ship;
+			return;
+		}
+	})
+	return r;
+
+}
+
+function planetFromShape(shape)
+{
+	var r;
+	planets.forEach(function(planet)
+	{
+		if(planet.shape == shape)
+		{
+			r = planet;
+			return;
+		}
+	})
+	return r;
 }
 
 function executeMove(targetship, targetplanet, destinationplanet)
@@ -236,6 +270,11 @@ function executeMove(targetship, targetplanet, destinationplanet)
 	if(targetplanet == destinationplanet)
 		snapship(targetship, targetplanet);
 
-	drawArrow(targetplanet, destinationplanet, targetship.fill());
 	console.log("execute move " + targetship + " " + targetplanet + " " + destinationplanet);
+	drawArrow(targetplanet, destinationplanet, targetship.shape.fill());
+}
+
+function snapship(ship, planet)
+{
+
 }
