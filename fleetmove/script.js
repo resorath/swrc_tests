@@ -309,7 +309,62 @@ function putShipOnPlanet(ship, planet)
 	ship.shape.y(planet.shape.y() + (planet.shape.radius() * 1.2));
 }
 
-function putShipOnArrow(ship, line, progress)
+function putShipOnArrow(ship, arrow, progress)
 {
+	var newshiploc = intercept(arrow, 20);
 
+	ship.shape.x(newshiploc.x);
+	ship.shape.y(newshiploc.y);
+}
+
+function intercept(arrow, progress)
+{
+	var points = arrow.shape.points();
+
+	var distance = lineDistance({x:points[0], y:[points[1]]}, {x:points[2], y:[points[3]]})
+
+	var x1 = points[0];
+	var y1 = points[1];
+
+	var x2 = points[2];
+	var y2 = points[3];
+
+	// Determine line lengths
+	var xlen = x2 - x1;
+	var ylen = y2 - y1;
+
+	// Determine hypotenuse length
+	var hlen = Math.sqrt(Math.pow(xlen,2) + Math.pow(ylen,2));
+
+	// The variable identifying the length of the `shortened` line.
+	// In this case 50 units.
+	var smallerLen = distance * (progress/100);
+
+	// Determine the ratio between they shortened value and the full hypotenuse.
+	var ratio = smallerLen / hlen;
+
+	var smallerXLen = xlen * ratio;
+	var smallerYLen = ylen * ratio;
+
+	// The new X point is the starting x plus the smaller x length.
+	var smallerX = x1 + smallerXLen;
+
+	// Same goes for the new Y.
+	var smallerY = y1 + smallerYLen;
+
+	return {x: smallerX, y: smallerY};
+
+}
+
+function lineDistance( point1, point2 ){
+    var xs = 0;
+    var ys = 0;
+
+    xs = point2.x - point1.x;
+    xs = xs * xs;
+
+    ys = point2.y - point1.y;
+    ys = ys * ys;
+
+    return Math.sqrt( xs + ys );
 }
