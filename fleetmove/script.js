@@ -105,14 +105,20 @@ function drawArrow(planet1, planet2, colour)
 	  name: colour + " line"
 	});
 
-	arrows.push({
+	var arrowobj = {
 		type: "arrow",
 		name: i,
 		team: colour,
+		sourceplanet: planet1,
+		destinationplanet: planet2,
 		shape: arrow
-	});
+	};
+
+	arrows.push(arrowobj);
 
 	layer.add(arrow);
+
+	return arrowobj;
 }
 
 
@@ -265,16 +271,45 @@ function planetFromShape(shape)
 	return r;
 }
 
+function arrowFromPlanets(source, destination)
+{
+	var r = undefined;
+	arrows.forEach(function(arrow)
+	{
+		if(arrow.sourceplanet == source && arrow.destinationplanet == destination)
+		{
+			r = arrow;
+			return;
+		}
+	});
+	return r;
+}
+
 function executeMove(targetship, targetplanet, destinationplanet)
 {
 	if(targetplanet == destinationplanet)
-		snapship(targetship, targetplanet);
+		return putShipOnPlanet(targetship, targetplanet);
 
 	console.log("execute move " + targetship + " " + targetplanet + " " + destinationplanet);
-	drawArrow(targetplanet, destinationplanet, targetship.shape.fill());
+
+
+	var arrow = arrowFromPlanets(targetplanet, destinationplanet);
+
+	if(arrow === undefined)
+		arrow = drawArrow(targetplanet, destinationplanet, targetship.shape.fill());
+
+	putShipOnArrow(targetship, arrow, 10)
+
+	layer.draw();
 }
 
-function snapship(ship, planet)
+function putShipOnPlanet(ship, planet)
+{
+	ship.shape.x(planet.shape.x() + (planet.shape.radius() * 1.2));
+	ship.shape.y(planet.shape.y() + (planet.shape.radius() * 1.2));
+}
+
+function putShipOnArrow(ship, line, progress)
 {
 
 }
