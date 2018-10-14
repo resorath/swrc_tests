@@ -22,7 +22,7 @@
             default: 'arcade',
             arcade: {
                 gravity: { y: 300 },
-                debug: true
+                debug: false
             }
         },
         scene: {
@@ -37,9 +37,10 @@
     var cannon;
     var charge = 0;
     var buckets;
-    var bottombucket;
+    var bottombucket, bucketleft, bucketright;
     var bottombucketcounttouches = 0;
     var timeoutholder;
+    var celebrating = false;
 
     function preload()
     {
@@ -47,7 +48,7 @@
         this.load.image('cannon', 'cannon.png');
         this.load.image('vertwall', 'vertwall.png');
         this.load.image('horwall', 'horwall.png');
-        this.load.image('red', 'assets/red.png');
+        this.load.image('red', 'red.png');
     }
 
     function create()
@@ -58,45 +59,70 @@
 
         buckets = this.physics.add.staticGroup();
 
-        buckets.create(50, 500, 'vertwall');
-        buckets.create(113, 500, 'vertwall');
+        bucketleft = buckets.create(50, 500, 'vertwall');
+        bucketright = buckets.create(113, 500, 'vertwall');
         bottombucket = buckets.create(80, 523, 'horwall');
 
         ball = this.physics.add.sprite(800, 800, 'ball');
         ball.setBounce(0.6);
-        ball.setCircle(16);
+        //ball.setCircle(16);
+        ball.setSize(32, 32);
         ball.setCollideWorldBounds(true);
         ball.setVelocityX(200);
 
-        this.physics.add.collider(ball, buckets);
+        this.physics.add.collider(ball, bucketleft);
+        this.physics.add.collider(ball, bucketright);
 
         var that = this;
 
-        this.physics.add.overlap(ball, bottombucket, function() {
-            bottombucketcounttouches++;
-            window.clearTimeout(timeoutholder);
+        this.physics.add.collider(ball, bottombucket, function() {
 
-            if(bottombucketcounttouches > 5)
+            var thiscollider = this;
+
+            if(bottombucket.body.touching.up)
             {
-                console.log("yay");
+                bottombucketcounttouches++;
                 window.clearTimeout(timeoutholder);
 
-                var particles = that.add.particles('red');
+                if(bottombucketcounttouches > 5)
+                {
+                    if(!celebrating)
+                    {
+                        console.log("yay");
+                        window.clearTimeout(timeoutholder);
 
-                var emitter = particles.createEmitter({
-                    speed: 100,
-                    scale: { start: 0.2, end: 0.1 }
-                });
+                        var particles = that.add.particles('red');
 
-                emitter.startFollow(ball);
+                        var emitter = particles.createEmitter({
+                            speed: 100,
+                            scale: { start: 0.2, end: 0.1 }
+                        });
+
+                        emitter.startFollow(ball);
+
+                        celebrating = true;
+
+                        ball.disableBody(true, true);
+
+                        window.setTimeout(function() { 
+                            particles.destroy(); 
+                            celebrating = false; 
+                            buckets.children.iterate(function(child)
+                            {
+                                console.log(child);
+                                child.x += 50;
+                                child.y -= 50;
+
+                            })
+                        } , 2000);
+                    }
 
 
 
+                }
+
+                timeoutholder = window.setTimeout(function() { bottombucketcounttouches = 0;}, 500);
             }
-
-            timeoutholder = window.setTimeout(function() { bottombucketcounttouches = 0;}, 500);
-        }, function() {
-            return bottombucket.body.touching.up;
         });
 
 
@@ -104,7 +130,6 @@
 
     function update()
     {   
-        console.log(bottombucketcounttouches);
         if(ball.y > 700 && ball.active)
         {
             ball.disableBody(true, true);
@@ -116,7 +141,7 @@
         cannon.rotation = rotation;
 
 
-        if(this.input.mousePointer.isDown)
+        if(this.input.mousePointer.isDown && !celebrating)
         {
             if(charge < 3000)
                 charge+= 20;
